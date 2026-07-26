@@ -1,0 +1,10 @@
+mapRoles: |
+  - rolearn: arn:aws:iam::729591922294:role/eksctl-eks-project-cluster-nodegro-NodeInstanceRole-pHA4cFaeAz8z
+    groups:
+    - system:bootstrappers
+    - system:nodes
+    username: system:node:{{EC2PrivateDNSName}}
+  - rolearn: arn:aws:iam::729591922294:role/jenkins-agent-role
+    username: jenkins-agent-role
+    groups:
+    - system:masters

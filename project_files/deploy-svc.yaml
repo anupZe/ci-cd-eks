@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cwvj-devsecops-demo
+  namespace: cwvj-devsecops
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cwvj-devsecops-demo
+  template:
+    metadata:
+      labels:
+        app: cwvj-devsecops-demo
+    spec:
+      containers:
+      - name: cwvj-devsecops-demo
+        image: 729591922294.dkr.ecr.eu-north-1.amazonaws.com/cwvj-devsecops-demo:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cwvj-devsecops-demo-service
+  namespace: cwvj-devsecops
+spec:
+  type: LoadBalancer
+  selector:
+    app: cwvj-devsecops-demo
+  ports:
+  - port: 80
+    targetPort: 8080
+    
