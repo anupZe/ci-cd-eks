@@ -1,11 +1,36 @@
 pipeline {
     agent any
 
+    environment {
+        SONARQUBE_SERVER = 'sonarqube'
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
                 checkout scm
+            }
+        }
+
+        stage('Check Environment') {
+            steps {
+                sh '''
+                    echo "Current User:"
+                    whoami
+
+                    echo "Current PATH:"
+                    echo $PATH
+
+                    echo "Java Version:"
+                    java -version
+
+                    echo "Maven Location:"
+                    which mvn
+
+                    echo "Maven Version:"
+                    mvn -version
+                '''
             }
         }
 
@@ -15,7 +40,7 @@ pipeline {
             }
         }
 
-        stage('Trivy FS Scan') {
+        stage('Trivy File System Scan') {
             steps {
                 sh 'trivy fs --exit-code 1 --severity HIGH,CRITICAL .'
             }
@@ -23,10 +48,10 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('sonarqube') {
+                withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     sh '''
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=eks-project
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=cwvj-devsecops-demo
                     '''
                 }
             }
@@ -38,6 +63,20 @@ pipeline {
                     waitForQualityGate abortPipeline: true
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline Finished'
+        }
+
+        success {
+            echo 'Build Successful'
+        }
+
+        failure {
+            echo 'Build Failed'
         }
     }
 }
