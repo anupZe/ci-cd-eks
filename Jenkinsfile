@@ -51,8 +51,7 @@ pipeline {
                 withSonarQubeEnv("${SONARQUBE_SERVER}") {
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=cwvj-devsecops-demo
-                    '''
+                        -Dsonar.projectKey=eks-project                    '''
                 }
             }
         }
