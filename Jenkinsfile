@@ -29,7 +29,9 @@ pipeline {
         }
         stage('ECR Login') {
             steps {
-                sh 'aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin $ECR_REGISTRY'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    sh 'aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin $ECR_REGISTRY'
+                }
             }
         }
         stage('Build Image') {
@@ -44,8 +46,11 @@ pipeline {
         }
         stage('Push to ECR') {
             steps {
-                sh 'docker push "$IMAGE_REPO:$BUILD_NUMBER"'
-                sh 'docker push "$IMAGE_REPO:latest"'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    sh 'aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin $ECR_REGISTRY'
+                    sh 'docker push "$IMAGE_REPO:$BUILD_NUMBER"'
+                    sh 'docker push "$IMAGE_REPO:latest"'
+                }
             }
         }
         stage('Update Deployment') {
@@ -55,20 +60,22 @@ pipeline {
         }
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''#!/bin/bash -l
-                    aws eks update-kubeconfig \
-                      --region eu-north-1 \
-                      --name eks-project-cluster \
-                      --kubeconfig /home/jenkins/.kube/config
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    sh '''#!/bin/bash -l
+                        aws eks update-kubeconfig \
+                          --region eu-north-1 \
+                          --name eks-project-cluster \
+                          --kubeconfig /home/jenkins/.kube/config
 
-                    kubectl create ns cwvj-devsecops --dry-run=client -o yaml | kubectl apply -f -
-                    kubectl apply -f deploy-svc.yaml
+                        kubectl create ns cwvj-devsecops --dry-run=client -o yaml | kubectl apply -f -
+                        kubectl apply -f deploy-svc.yaml
 
-                    kubectl rollout status -n cwvj-devsecops deployment/cwvj-devsecops-demo --timeout=120s || {
-                        kubectl rollout undo -n cwvj-devsecops deployment/cwvj-devsecops-demo || true
-                        exit 1
-                    }
-                '''
+                        kubectl rollout status -n cwvj-devsecops deployment/cwvj-devsecops-demo --timeout=120s || {
+                            kubectl rollout undo -n cwvj-devsecops deployment/cwvj-devsecops-demo || true
+                            exit 1
+                        }
+                    '''
+                }
             }
         }
     }
