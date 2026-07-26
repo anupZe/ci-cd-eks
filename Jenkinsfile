@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'    // agar Tools me name mwrohit hai to yahan mwrohit likho
+    }
+
     stages {
 
         stage('Checkout') {
@@ -25,8 +30,8 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                    mvn sonar:sonar \
-                    -Dsonar.projectKey=eks-project
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=eks-project
                     '''
                 }
             }
