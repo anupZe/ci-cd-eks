@@ -9,7 +9,7 @@ public class AppTest {
     void testBrandHtmlContainsBrand() {
         String h = App.brandHtml();
         assertNotNull(h);
-        assertTrue(h.contains("Cloud With VarJosh"));
+        assertTrue(h.contains("Hello bro"));
     }
 
     @Test
